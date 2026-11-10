@@ -1,0 +1,217 @@
+{
+  "project": {
+    "name": "Network Intrusion Detection System (NIDS)",
+    "description": "A production-ready Machine Learning-based NIDS that classifies network traffic into Normal, DoS, Probe, R2L, and U2R attack families — powered by IBM Cloud Lite Services.",
+    "version": "1.0.0",
+    "author": "IBM AICTE Internship",
+    "problem_statement": "#40",
+    "license": "MIT",
+    "python_version": "3.10+"
+  },
+
+  "application": {
+    "entry_point": "app.py",
+    "framework": "Flask",
+    "framework_version": "3.0.3",
+    "host": "0.0.0.0",
+    "port": 5000,
+    "debug": true,
+    "use_reloader": false,
+    "template_folder": "templates",
+    "static_folder": "static",
+    "secret_key_env": "FLASK_SECRET_KEY",
+    "cors_enabled": true
+  },
+
+  "training": {
+    "entry_point": "train.py",
+    "default_data_path": "data/Train_data.csv",
+    "test_data_path": "data/Test_data.csv",
+    "model_output_dir": "models",
+    "log_file": "logs/train.log",
+    "smote_enabled": true,
+    "upload_cos_flag": "--upload-cos",
+    "dataset": {
+      "name": "KDD Cup 1999",
+      "source": "https://www.kaggle.com/datasets/sampadab17/network-intrusion-detection",
+      "total_features": 41,
+      "target_column": "label",
+      "categorical_columns": ["protocol_type", "service", "flag"]
+    }
+  },
+
+  "models": {
+    "random_forest": {
+      "type": "RandomForestClassifier",
+      "n_estimators": 200,
+      "class_weight": "balanced"
+    },
+    "xgboost": {
+      "type": "XGBClassifier",
+      "eval_metric": "mlogloss"
+    },
+    "decision_tree": {
+      "type": "DecisionTreeClassifier",
+      "max_depth": 20
+    },
+    "ensemble": {
+      "type": "VotingClassifier",
+      "voting": "soft",
+      "estimators": ["random_forest", "xgboost"],
+      "note": "Best performing model"
+    }
+  },
+
+  "attack_classes": {
+    "normal": {
+      "color": "#22c55e",
+      "examples": ["Legitimate connections"]
+    },
+    "DoS": {
+      "color": "#ef4444",
+      "examples": ["smurf", "neptune", "back", "teardrop", "land"]
+    },
+    "Probe": {
+      "color": "#f59e0b",
+      "examples": ["ipsweep", "nmap", "portsweep", "satan"]
+    },
+    "R2L": {
+      "color": "#8b5cf6",
+      "examples": ["guess_passwd", "ftp_write", "warezclient"]
+    },
+    "U2R": {
+      "color": "#ec4899",
+      "examples": ["buffer_overflow", "rootkit", "loadmodule"]
+    }
+  },
+
+  "api_endpoints": {
+    "health":             { "method": "GET",  "path": "/api/health",             "description": "Health check & model status" },
+    "predict":            { "method": "POST", "path": "/api/predict",            "description": "Single connection prediction" },
+    "predict_batch":      { "method": "POST", "path": "/api/predict/batch",      "description": "Batch prediction from JSON array" },
+    "predict_wml":        { "method": "POST", "path": "/api/predict/wml",        "description": "Score via IBM Watson Machine Learning endpoint" },
+    "metrics":            { "method": "GET",  "path": "/api/metrics",            "description": "Saved model performance metrics" },
+    "alerts":             { "method": "GET",  "path": "/api/alerts",             "description": "Recent detection alerts (Cloudant or in-memory)" },
+    "attack_distribution":{ "method": "GET",  "path": "/api/attack_distribution","description": "Attack family counts from recent alerts" }
+  },
+
+  "ibm_cloud_services": {
+    "watson_machine_learning": {
+      "service": "Watson Machine Learning",
+      "tier": "Lite (Free)",
+      "usage": "Deploy and score ML model via REST API",
+      "credentials_in": ".env"
+    },
+    "cloud_object_storage": {
+      "service": "IBM Cloud Object Storage",
+      "tier": "Lite (25 GB free)",
+      "usage": "Store dataset and model artefacts",
+      "credentials_in": ".env"
+    },
+    "cloudant": {
+      "service": "IBM Cloudant",
+      "tier": "Lite (1 GB free)",
+      "usage": "NoSQL logging of network detection events",
+      "credentials_in": ".env"
+    },
+    "ibm_cloud": {
+      "usage": "Master API key for all IBM Cloud service authentication",
+      "credentials_in": ".env"
+    }
+  },
+
+  "environment_variables": {
+    "FLASK_HOST":       { "default": "0.0.0.0",              "description": "Host for Flask server" },
+    "FLASK_PORT":       { "default": "5000",                 "description": "Port for Flask server" },
+    "FLASK_DEBUG":      { "default": "True",                 "description": "Enable Flask debug mode" },
+    "FLASK_SECRET_KEY": { "default": "<set in .env>",        "description": "Flask session secret key — keep private" },
+    "MODEL_PATH":       { "default": "models/nids_model.pkl","description": "Path to saved model pickle" },
+    "LOG_LEVEL":        { "default": "INFO",                 "description": "Logging level (DEBUG, INFO, WARNING, ERROR)" },
+    "LOG_FILE":         { "default": "logs/nids.log",        "description": "Application log file path" }
+  },
+
+  "project_structure": {
+    "app.py":                              "Flask REST API + Dashboard entry-point",
+    "train.py":                            "CLI training pipeline entry-point",
+    "requirements.txt":                    "Python package dependencies",
+    "app.json":                            "Project configuration file",
+    ".env":                                "IBM Cloud & App environment credentials (not committed)",
+    "src/preprocessor.py":                 "Data cleaning, encoding, scaling, SMOTE",
+    "src/trainer.py":                      "RF, XGBoost, Ensemble training and evaluation",
+    "src/ibm_watson.py":                   "IBM WML, COS, Cloudant integrations",
+    "notebooks/NIDS_EDA_Training.ipynb":   "EDA, visualization, full training walkthrough",
+    "templates/index.html":                "Dashboard UI",
+    "static/css/style.css":               "Dashboard stylesheet",
+    "static/js/main.js":                   "Dashboard JavaScript",
+    "models/":                             "Saved model artefacts (auto-generated)",
+    "data/":                               "Training and test CSV files",
+    "logs/":                               "Runtime and training logs"
+  },
+
+  "dependencies": {
+    "ml_data_science": {
+      "numpy":          "1.26.4",
+      "pandas":         "2.1.4",
+      "scikit-learn":   "1.4.2",
+      "xgboost":        "2.0.3",
+      "imbalanced-learn":"0.12.3",
+      "joblib":         "1.3.2"
+    },
+    "visualization": {
+      "matplotlib":     "3.8.4",
+      "seaborn":        "0.13.2",
+      "plotly":         "5.18.0"
+    },
+    "web_framework": {
+      "flask":          "3.0.3",
+      "flask-cors":     "4.0.1",
+      "Werkzeug":       "3.0.3",
+      "waitress":       "3.0.0"
+    },
+    "ibm_cloud": {
+      "ibm-watson":                  "8.1.0",
+      "ibm-watson-machine-learning": "1.0.357",
+      "ibm-cloud-sdk-core":          "3.21.0"
+    },
+    "utilities": {
+      "python-dotenv": "1.0.1",
+      "requests":      "2.31.0",
+      "urllib3":       "2.1.0"
+    },
+    "jupyter": {
+      "jupyter":       "1.0.0",
+      "ipykernel":     "6.29.5",
+      "nbformat":      "5.9.2"
+    }
+  },
+
+  "quick_start": {
+    "step_1_install":  "pip install -r requirements.txt",
+    "step_2_configure": "Edit .env with your IBM Cloud credentials",
+    "step_3_dataset":  "Download KDD Cup dataset from Kaggle → place as data/Train_data.csv",
+    "step_4_train":    "python train.py --data data/Train_data.csv",
+    "step_5_launch":   "python app.py",
+    "step_6_open":     "http://localhost:5000"
+  },
+
+  "artefacts": {
+    "model_files": [
+      "models/nids_model.pkl",
+      "models/scaler.pkl",
+      "models/label_encoder.pkl",
+      "models/enc_protocol.pkl",
+      "models/enc_service.pkl",
+      "models/enc_flag.pkl",
+      "models/metrics.json"
+    ],
+    "log_files": [
+      "logs/nids.log",
+      "logs/train.log"
+    ]
+  },
+
+  "alert_buffer": {
+    "max_size": 200,
+    "storage_priority": ["cloudant", "in_memory"]
+  }
+}
