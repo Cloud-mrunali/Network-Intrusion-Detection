@@ -224,4 +224,4 @@ result = wml.predict([[0, 1, 2, 0, 0, 0, ...]])
 
 ## 📄 License
 
-MIT License — IBM AICTE Internship Project 2024
+MIT License — IBM AICTE Internship Project 2026
